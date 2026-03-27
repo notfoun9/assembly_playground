@@ -1,5 +1,5 @@
-	.text
-	.global _start
+.text
+.global _start
 
 /* -------------------------------- */
 // main execution start
@@ -84,7 +84,7 @@ exit:
 	mov	x8, #93
 	svc	#0
 
-    .section .data
+.section .data
 boom:
     .ascii "BOOM!!!\n"
     boom_len = . - boom

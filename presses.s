@@ -1,6 +1,5 @@
-	.text
-	.global _start
-
+.text
+.global _start
 _start:
     bl exit
 
@@ -9,4 +8,4 @@ exit:
 	mov	x8, #93
 	svc	#0
 
-    .section .data
+.section .data

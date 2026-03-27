@@ -1,10 +1,9 @@
-    .section .bss
+.section .data
 buf:
     .skip 100
 
-    .section .text
-    .global _start
-
+.section .text
+.global _start
 _start:
     // read(0, buf, 100)
     mov x0, #0          // stdin fd
@@ -26,4 +25,3 @@ _start:
     mov x0, #0
     mov x8, #93
     svc #0
-

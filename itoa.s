@@ -1,13 +1,12 @@
-    .section .data
+.section .data
 
-    value = 12345
+value = 12345
+
 buf:
     .space 20
 
-    .section .text
-    .global _start
-
-
+.section .text
+.global _start
 _start:
     mov x0, #value        // number to print
     adr x1, buf           // buffer base
