@@ -1,4 +1,3 @@
-EXECUTABLES_PATH="executables"
 all: itoa input sleep count stack stack_with_macro quit
 
 itoa: itoa.s
