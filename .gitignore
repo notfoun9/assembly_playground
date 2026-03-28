@@ -1,2 +1,3 @@
 executables
 .asm-lsp.toml
+tests

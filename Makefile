@@ -1,4 +1,4 @@
-all: itoa input sleep count stack
+all: itoa input sleep count stack quit
 
 itoa: itoa.s
 	@as -o itoa.o itoa.s
@@ -24,3 +24,8 @@ stack: stack.s
 	@as -g -o stack.o stack.s
 	@ld -o executables/stack stack.o
 	@rm stack.o
+
+quit: quit.s
+	@as -g -o quit.o quit.s
+	@ld -o executables/quit quit.o
+	@rm quit.o
