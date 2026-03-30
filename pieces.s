@@ -29,10 +29,10 @@ piece_position:
 
 .global previous_position
 previous_position:
-    .quad 28
-    .quad 29
-    .quad 30
+    .quad 18
+    .quad 19
     .quad 31
+    .quad 32
 
 .text
 .include "macros.s"
