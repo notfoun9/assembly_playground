@@ -70,6 +70,18 @@ _start:
 
 /* -- Switch case input char start -- */
 switch_input_char_start:
+        cmp w3, #'k'
+        bne skip_clock
+            mov x0, #1
+            bl rotate_piece
+        skip_clock:
+
+        cmp w3, #'j'
+        bne skip_counterclock
+            mov x0, #3
+            bl rotate_piece
+        skip_counterclock:
+
         cmp w3, #'s'
         bne skip_down
             adr x10, cur_position 
@@ -135,6 +147,34 @@ save_cur_to_prev:
     ret
 
 adjust_grid:
+    adr x4, previous_position
+    ldr x0, [x4]
+    ldr x1, [x4, #8]
+    ldr x2, [x4, #16]
+    ldr x3, [x4, #24]
+    adr x4, grid
+    mov w5, #' '
+    strb w5, [x4, x0]
+    strb w5, [x4, x1]
+    strb w5, [x4, x2]
+    strb w5, [x4, x3]
+
+    adr x4, piece_position
+    ldr x0, [x4]
+    ldr x1, [x4, #8]
+    ldr x2, [x4, #16]
+    ldr x3, [x4, #24]
+
+    adr x4, grid
+    mov w5, #'r'
+    strb w5, [x4, x0]
+    mov w5, #'g'
+    strb w5, [x4, x1]
+    mov w5, #'b'
+    strb w5, [x4, x2]
+    mov w5, #'y'
+    strb w5, [x4, x3]
+
     adr x2, prev_position
     ldp x0, x1, [x2]
 
@@ -230,6 +270,8 @@ print_grid:
             beq red_cell
             cmp w23, #'b'
             beq blue_cell
+            cmp w23, #'y'
+            beq yellow_cell
             cmp w23, #'g'
             beq green_cell
             cmp w23, #' '
@@ -242,6 +284,9 @@ print_grid:
                 b no_cell
             blue_cell: 
                 bl write_blue_cell
+                b no_cell
+            yellow_cell:
+                bl write_yellow_cell
                 b no_cell
             blank_cell:
                 bl write_blank_cell

@@ -27,6 +27,15 @@ write_green_cell:
     svc #0
     ret
 
+.global write_yellow_cell
+write_yellow_cell:
+    mov x0, #0
+    adr x1, yellow_cell_seq
+    mov x2, yellow_cell_seq_len
+    mov x8, WRITE
+    svc #0
+    ret
+
 .global write_blue_cell
 write_blue_cell:
     mov x0, #0
@@ -133,6 +142,10 @@ blue_cell_seq:
 green_cell_seq:
     .ascii "\x1b[42m  \x1b[0m"
     green_cell_seq_len = . - green_cell_seq
+
+yellow_cell_seq:
+    .ascii "\x1b[43m  \x1b[0m"
+    yellow_cell_seq_len = . - yellow_cell_seq
 
 blank_cell_seq:
     .ascii "  "

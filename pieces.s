@@ -1,0 +1,430 @@
+.data
+raws = 22
+columns = 12
+
+/* ----------------------- Piece types ----------------------- */
+// One of  I, L, J, S, T, Z, O
+zero:
+    .ascii "0\n"
+one:
+    .ascii "1\n"
+two:
+    .ascii "2\n"
+three:
+    .ascii "3\n"
+
+piece_type:
+    .ascii "Z"
+piece_state:
+    .byte 0 // from 0 to 3
+
+.global piece_position
+piece_position:
+    .quad 18
+    .quad 19
+    .quad 31
+    .quad 32
+
+.global previous_position
+previous_position:
+    .quad 28
+    .quad 29
+    .quad 30
+    .quad 31
+
+.text
+.include "macros.s"
+.global init_piece
+init_piece:
+    ret
+
+
+// expects x0 - number of rotations
+.global rotate_piece
+rotate_piece:
+    PROLOGUE
+
+    adr x22, piece_position
+    mov x23, raws           // x23 - raws    
+    mov x24, columns        // x24 - columns
+    
+    ldr x10, [x22]
+    ldr x11, [x22, #8]
+    ldr x12, [x22, #16]
+    ldr x13, [x22, #24]
+
+    adr x20, piece_type
+    ldrb w20, [x20]         // w20 - piece_type
+
+pick_rotation:
+    adr x21, piece_state
+    ldrb w21, [x21]         // w21 - piece_state
+
+    cmp w20, #'I'
+    beq I_rotation
+
+    cmp w20, #'L'
+    beq L_rotation
+
+    cmp w20, #'J'
+    beq J_rotation
+
+    cmp w20, #'S'
+    beq S_rotation
+
+    cmp w20, #'T'
+    beq T_rotation
+
+    cmp w20, #'Z'
+    beq Z_rotation
+
+    cmp w20, #'O'
+    beq O_rotation
+
+/* --------------------------   I   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │ . . . .│      │ . .██ .│      │ . . . .│      │ .██ . .│
+      │████████│ -- > │ . .██ .│ -- > │ . . . .│ -- > │ .██ . .│
+      │ . . . .│ -- > │ . .██ .│ -- > │████████│ -- > │ .██ . .│
+      │ . . . .│      │ . .██ .│      │ . . . .│      │ .██ . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+I_rotation:
+    cmp w21, #0
+    bne I_not_zero
+    // from 0 to 1
+    sub x10, x10, x24  // 0:  - columns + 2
+    add x10, x10, #2
+    add x11, x11, #1   // 1:  + 1 
+    add x12, x12, x24  // 2:  + columns
+    add x13, x13, x24  // 3:  + 2 * columns -1
+    add x13, x13, x24
+    sub x13, x13, #1
+b rotation_end
+
+
+    I_not_zero:
+    cmp w21, #1
+    bne I_not_one
+    // from 1 to 2
+    add x10, x10, x24  // 0:  + 2 * columns - 2
+    add x10, x10, x24
+    sub x10, x10, #2
+    add x11, x11, x24  // 1:  + columns - 1
+    sub x11, x11, #1
+    sub x13, x13, x24  // 3:  - columns + 1
+    add x13, x13, #1
+b rotation_end
+
+    I_not_one:
+    cmp w21, #2
+    bne I_not_two
+    // from 2 to 3
+    sub x10, x10, x24  // 0:  - 2 * columns + 1
+    sub x10, x10, x24
+    add x10, x10, #1
+    sub x11, x11, x24  // 1:  - columns
+    sub x12, x12, #1   // 2:  - 1
+    add x13, x13, x24  // 3:  + columns - 2
+    sub x13, x13, #2
+b rotation_end
+
+    I_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    add x10, x10, x24  // 0:  + columns - 1
+    sub x10, x10, #1
+    sub x12, x12, x24  // 2: - columns + 1
+    add x12, x12, #1
+    sub x13, x13, x24  // 3:  - 2 * columns + 2
+    sub x13, x13, x24
+    add x13, x13, #2
+b rotation_end
+
+/* --------------------------   L   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │ . .██ .│      │ .██ . .│      │ . . . .│      │████ . .│
+      │██████ .│ -- > │ .██ . .│ -- > │██████ .│ -- > │ .██ . .│
+      │ . . . .│ -- > │ .████ .│ -- > │██ . . .│ -- > │ .██ . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+L_rotation:
+    cmp w21, #0
+    bne L_not_zero
+    // from 0 to 1
+    sub x10, x10, #1
+    add x11, x11, #1
+    add x12, x12, x24
+    add x13, x13, x24
+b rotation_end
+
+    L_not_zero:
+    cmp w21, #1
+    bne L_not_one
+    // from 1 to 2
+    add x10, x10, x24
+    sub x10, x10, #1
+
+    sub x12, x12, x24
+    add x12, x12, #1
+    sub x13, x13, #2
+b rotation_end
+
+    L_not_one:
+    cmp w21, #2
+    bne L_not_two
+    // from 2 to 3
+    sub x10, x10, x24
+    sub x11, x11, x24
+    sub x12, x12, #1
+    add x13, x13, #1
+b rotation_end
+
+    L_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    add x10, x10, #2
+    add x11, x11, x24
+    sub x11, x11, #1
+
+    sub x13, x13, x24
+    add x13, x13, #1
+b rotation_end
+
+b rotation_end
+
+/* --------------------------   J   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │██ . . .│      │ .████ .│      │ . . . .│      │ .██ . .│
+      │██████ .│ -- > │ .██ . .│ -- > │██████ .│ -- > │ .██ . .│
+      │ . . . .│ -- > │ .██ . .│ -- > │ . .██ .│ -- > │████ . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+J_rotation:
+    cmp w21, #0
+    bne J_not_zero
+    // from 0 to 1
+    add x10, x10, #1   // 0:  + 1
+    sub x11, x11, x24  // 1:  - columns + 2
+    add x11, x11, #2
+    add x13, x13, x24  // 3:  + columns - 1
+    sub x13, x13, #1
+b rotation_end
+
+    J_not_zero:
+    cmp w21, #1
+    bne J_not_one
+    // from 1 to 2
+    add x10, x10, x24  // 0:  + columns - 1
+    sub x10, x10, #1
+    add x11, x11, x24  // 1:  + columns - 1
+    sub x11, x11, #1
+    add x12, x12, #1   // 2:  + 1
+    add x13, x13, #1   // 3:  + 1
+b rotation_end
+
+    J_not_one:
+    cmp w21, #2
+    bne J_not_two
+    // from 2 to 3
+    sub x10, x10, x24  // 0:  - columns + 1
+    add x10, x10, #1
+    add x12, x12, x24  // 2:  + columns - 1
+    sub x12, x12, #2
+    sub x13, x13, #1   // 3:  - 1
+b rotation_end
+
+    J_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    sub x10, x10, #1   // 0:  - 1
+    sub x11, x11, #1   // 1:  - 1
+    sub x12, x12, x24  // 2:  - columns + 1
+    add x12, x12, #1
+    sub x13, x13, x24  // 3:  - columns + 1
+    add x13, x13, #1
+b rotation_end
+
+/* --------------------------   S   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │ .████ .│      │ .██ . .│      │ . . . .│      │██ . . .│
+      │████ . .│ -- > │ .████ .│ -- > │ .████ .│ -- > │████ . .│
+      │ . . . .│ -- > │ . .██ .│ -- > │████ . .│ -- > │ .██ . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+S_rotation:
+    cmp w21, #0
+    bne S_not_zero
+    // from 0 to 1
+    add x11, x11, x24
+    sub x11, x11, #1
+    add x12, x12, #2
+    add x13, x13, x24
+    add x13, x13, #1
+b rotation_end
+
+    S_not_zero:
+    cmp w21, #1
+    bne S_not_one
+    // from 1 to 2
+    add x10, x10, x24
+    add x11, x11, #1
+    add x12, x12, x24
+    sub x12, x12, #2
+    sub x13, x13, #1
+b rotation_end
+
+    S_not_one:
+    cmp w21, #2
+    bne S_not_two
+    // from 2 to 3
+    sub x10, x10, #1
+    sub x10, x10, x24
+    sub x11, x11, #2
+    sub x12, x12, x24
+    add x12, x12, #1
+b rotation_end
+
+    S_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    add x10, x10, #1
+    sub x11, x11, x24
+    add x11, x11, #2
+    sub x12, x12, #1
+    sub x13, x13, x24
+b rotation_end
+
+/* --------------------------   T   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │ .██ . .│      │ .██ . .│      │ . . . .│      │ .██ . .│
+      │██████ .│ -- > │ .████ .│ -- > │██████ .│ -- > │████ . .│
+      │ . . . .│ -- > │ .██ . .│ -- > │ .██ . .│ -- > │ .██ . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+T_rotation:
+    cmp w21, #0
+    bne T_not_zero
+    // from 0 to 1
+    add x11, x11, #1
+    add x12, x12, #1
+    sub x13, x13, #1
+    add x13, x13, x24
+b rotation_end
+
+    T_not_zero:
+    cmp w21, #1
+    bne T_not_one
+    // from 1 to 2
+    sub x10, x10, #1
+    add x10, x10, x24
+b rotation_end
+
+    T_not_one:
+    cmp w21, #2
+    bne T_not_two
+    // from 2 to 3
+    add x10, x10, #1
+    sub x10, x10, x24
+    sub x11, x11, #1
+    sub x12, x12, #1
+b rotation_end
+
+    T_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    sub x13, x13, x24
+    add x13, x13, #1
+b rotation_end
+
+/* --------------------------   Z   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │████ . .│      │ . .██ .│      │ . . . .│      │ .██ . .│
+      │ .████ .│ -- > │ .████ .│ -- > │████ . .│ -- > │████ . .│
+      │ . . . .│ -- > │ .██ . .│ -- > │ .████ .│ -- > │██ . . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+Z_rotation:
+    cmp w21, #0
+    bne Z_not_zero
+    // from 0 to 1
+    add x10, x10, #2
+    add x11, x11, x24
+    add x12, x12, #1
+    add x13, x13, x24
+    sub x13, x13, #1
+b rotation_end
+
+    Z_not_zero:
+    cmp w21, #1
+    bne Z_not_one
+    // from 1 to 2
+    add x10, x10, x24
+    sub x10, x10, #2
+    add x12, x12, x24
+    sub x12, x12, #1
+    add x13, x13, #1
+b rotation_end
+
+    Z_not_one:
+    cmp w21, #2
+    bne Z_not_two
+    // from 2 to 3
+    sub x10, x10, x24
+    add x10, x10, #1
+    sub x11, x11, #1
+    sub x12, x12, x24
+    sub x13, x13, #2
+b rotation_end
+
+    Z_not_two:
+    // assuming it's 3
+    // from 3 to 0
+    sub x10, x10, #1
+    sub x11, x11, x24
+    add x11, x11, #1
+    sub x13, x13, x24
+    add x13, x13, #2
+b rotation_end
+
+/* --------------------------   O   --------------------------  */
+/* 0: ┌────────┐   1: ┌────────┐   2: ┌────────┐   3: ┌────────┐
+      │ .████ .│      │ .████ .│      │ .████ .│      │ .████ .│
+      │ .████ .│ -- > │ .████ .│ -- > │ .████ .│ -- > │ .████ .│
+      │ . . . .│ -- > │ . . . .│ -- > │ . . . .│ -- > │ . . . .│
+      │ . . . .│      │ . . . .│      │ . . . .│      │ . . . .│
+      └────────┘      └────────┘      └────────┘      └────────┘
+*/
+O_rotation:
+b rotation_end
+
+rotation_end:
+    // change the state
+    adr x1, piece_state 
+    ldrb w2, [x1]
+    add w2, w2, #1
+    and w2, w2, #3
+    strb w2, [x1]
+
+    sub x0, x0, #1
+    cmp x0, #0
+    bne pick_rotation
+
+    adr x0, previous_position
+    adr x1, piece_position
+    mov x2, #32
+    bl memcpy
+
+    // update position
+    str x10, [x22]
+    str x11, [x22, #8]
+    str x12, [x22, #16]
+    str x13, [x22, #24]
+    
+    EPILOGUE
+    ret
