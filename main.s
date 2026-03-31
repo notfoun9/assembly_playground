@@ -47,6 +47,7 @@ _start:
 // term set
 
     bl fill_grid
+    bl spawn_new_piece
 
     game_loop:
         bl adjust_grid
@@ -125,7 +126,21 @@ adjust_grid:
     bl does_collide_with_walls
     cmp x0, #0
     bne restore_position
-// check for collisions with walls
+// check for collisions with walls end
+
+// check for collisions with placed pieces:
+    // places #0 x0 if non-placing collision
+    // places #1 x0 if placing collision
+    bl does_collide_with_pieces
+    cmp x0, #0
+    beq restore_position
+    cmp x0, #1
+    bne no_pieces_collisions
+        bl restore_prev_state
+        bl place_piece_on_grid
+        bl spawn_new_piece
+    no_pieces_collisions:
+// check for collisions with placed pieces end
 
 // check for collisions with floor:
     bl does_collide_with_floor
@@ -184,7 +199,7 @@ fill_grid:
         blt full_fill
 
 
-    mov w0, #'r'
+    mov w0, #'Z'
     mov x2, raws
     sub x2, x2, #1
     mov x4, columns
@@ -288,6 +303,45 @@ does_collide_with_floor:
         cmp x0, #0
         bne floor_collision_check_loop
     floor_collision_check_end:
+    ret
+
+// places #0 x0 if non-placing collision
+// places #1 x0 if placing collision
+does_collide_with_pieces:
+    adr x1, piece_position
+    adr x2, grid
+    mov x3, #0
+    pieces_collision_check_loop:
+        cmp x3, #32
+        beq no_collision
+
+        ldr x0, [x1, x3]
+        ldrb w4, [x2, x0]
+        cmp w4, #'a'
+        blt no_collision_for_cell
+        cmp w4, #'z'
+        bgt no_collision_for_cell
+
+        adr x4, previous_position
+        ldr x4, [x4, x3]
+        sub x4, x0, x4
+        cmp x4, #12
+        beq placeing_collision
+        b no_placing_collision
+
+        no_collision_for_cell:
+        add x3, x3, #8
+        b pieces_collision_check_loop
+    no_placing_collision:
+    mov x0, #0
+    ret
+
+    placeing_collision:
+    mov x0, #1
+    ret
+
+    no_collision:
+    mov x0, #-1
     ret
 
 place_piece_on_grid:
