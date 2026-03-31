@@ -455,7 +455,6 @@ restore_prev_state:
 .global move_down
 move_down:
     PROLOGUE
-
     bl cur_to_prev_pos
 
     adr x0, piece_position
@@ -471,3 +470,43 @@ move_down:
 
     EPILOGUE
     ret
+
+.global move_right
+move_right:
+    PROLOGUE
+
+    bl cur_to_prev_pos
+
+    adr x0, piece_position
+    ldp x1, x2, [x0]
+    ldp x3, x4, [x0, #16]
+    add x1, x1, #1
+    add x2, x2, #1
+    add x3, x3, #1
+    add x4, x4, #1
+
+    stp x1, x2, [x0]
+    stp x3, x4, [x0, #16]
+
+    EPILOGUE
+    ret
+
+.global move_left
+move_left:
+    PROLOGUE
+    bl cur_to_prev_pos
+
+    adr x0, piece_position
+    ldp x1, x2, [x0]
+    ldp x3, x4, [x0, #16]
+    sub x1, x1, #1
+    sub x2, x2, #1
+    sub x3, x3, #1
+    sub x4, x4, #1
+
+    stp x1, x2, [x0]
+    stp x3, x4, [x0, #16]
+
+    EPILOGUE
+    ret
+

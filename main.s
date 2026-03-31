@@ -76,31 +76,24 @@ switch_input_char_start:
             b switch_input_char_end
         skip_counterclock:
 
-        cmp w9, #'s'
-        bne skip_down
-            b switch_input_char_end
-        skip_down:
-
-        cmp w9, #'w'
-        bne skip_up
-            b switch_input_char_end
-        skip_up:
-
-        cmp w9, #'d'
-        bne skip_right
-            b switch_input_char_end
-        skip_right:
-
         cmp w9, #'a'
         bne skip_left
+            bl move_left
             b switch_input_char_end
         skip_left:
 
-        cmp w9, #' '
-        bne skip_space
+        cmp w9, #'s'
+        bne skip_down
             bl move_down
             b switch_input_char_end
-        skip_space:
+        skip_down:
+
+        cmp w9, #'d'
+        bne skip_right
+            bl move_right
+            b switch_input_char_end
+        skip_right:
+
 /* --- Switch case input char end --- */
 switch_input_char_end:
 
