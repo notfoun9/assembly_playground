@@ -67,23 +67,25 @@ _start:
         mov x2, #1
         mov x8, #0x3F
         svc #0
-        ldrb w3, [x1]
+        ldrb w9, [x1]
 
 /* -- Switch case input char start -- */
 switch_input_char_start:
-        cmp w3, #'k'
+        cmp w9, #'k'
         bne skip_clock
             mov x0, #1
             bl rotate_piece
+            b switch_input_char_end
         skip_clock:
 
-        cmp w3, #'j'
+        cmp w9, #'j'
         bne skip_counterclock
             mov x0, #3
             bl rotate_piece
+            b switch_input_char_end
         skip_counterclock:
 
-        cmp w3, #'s'
+        cmp w9, #'s'
         bne skip_down
             adr x10, cur_tester_pos
             ldrb w4, [x10]
@@ -91,9 +93,10 @@ switch_input_char_start:
             beq switch_input_char_end
             add w4, w4, #1
             strb w4, [x10]
+            b switch_input_char_end
         skip_down:
 
-        cmp w3, #'w'
+        cmp w9, #'w'
         bne skip_up
             adr x10, cur_tester_pos
             ldrb w4, [x10]
@@ -101,9 +104,10 @@ switch_input_char_start:
             beq switch_input_char_end
             sub w4, w4, #1
             strb w4, [x10]
+            b switch_input_char_end
         skip_up:
 
-        cmp w3, #'d'
+        cmp w9, #'d'
         bne skip_right
             adr x10, cur_tester_pos
             ldrb w4, [x10, #8]
@@ -111,9 +115,10 @@ switch_input_char_start:
             beq switch_input_char_end
             add w4, w4, #1
             strb w4, [x10, #8]
+            b switch_input_char_end
         skip_right:
 
-        cmp w3, #'a'
+        cmp w9, #'a'
         bne skip_left
             adr x10, cur_tester_pos
             ldrb w4, [x10, #8]
@@ -121,11 +126,18 @@ switch_input_char_start:
             beq switch_input_char_end
             sub w4, w4, #1
             strb w4, [x10, #8]
+            b switch_input_char_end
         skip_left:
+
+        cmp w9, #' '
+        bne skip_space
+            bl move_down
+            b switch_input_char_end
+        skip_space:
 /* --- Switch case input char end --- */
 switch_input_char_end:
 
-        cmp w3, #'q'
+        cmp w9, #'q'
         beq game_loop_end
         b game_loop
     game_loop_end:
@@ -181,10 +193,8 @@ adjust_grid:
 // check collision start
     mov x5, x27 // current tester position
     adr x4, piece_position
-    ldr x0, [x4]
-    ldr x1, [x4, #8]
-    ldr x2, [x4, #16]
-    ldr x3, [x4, #24]
+    ldp x0, x1, [x4]
+    ldp x2, x3, [x4, #16]
 
     cmp x0, x5
     beq state_restoring
@@ -198,10 +208,8 @@ adjust_grid:
 
 // erase previous piece state start
     adr x4, previous_position
-    ldr x0, [x4]
-    ldr x1, [x4, #8]
-    ldr x2, [x4, #16]
-    ldr x3, [x4, #24]
+    ldp x0, x1, [x4]
+    ldp x2, x3, [x4, #16]
     adr x4, grid
     mov w5, #' '
     strb w5, [x4, x0]
@@ -217,10 +225,8 @@ skip_state_restoring:
 
 // add current piece state start
     adr x4, piece_position
-    ldr x0, [x4]
-    ldr x1, [x4, #8]
-    ldr x2, [x4, #16]
-    ldr x3, [x4, #24]
+    ldp x0, x1, [x4]
+    ldp x2, x3, [x4, #16]
 
     adr x4, grid
     mov w5, #'r'

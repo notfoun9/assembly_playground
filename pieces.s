@@ -14,7 +14,7 @@ three:
     .ascii "3\n"
 
 piece_type:
-    .ascii "Z"
+    .ascii "T"
 piece_state:
     .byte 0 // from 0 to 3
 prev_state:
@@ -23,9 +23,9 @@ prev_state:
 .global piece_position
 piece_position:
     .quad 18
-    .quad 19
+    .quad 29
+    .quad 30
     .quad 31
-    .quad 32
 
 .global previous_position
 previous_position:
@@ -46,19 +46,16 @@ init_piece:
 rotate_piece:
     PROLOGUE
 
+    bl cur_to_prev_pos
+
     mov x23, raws           // x23 - raws    
     mov x24, columns        // x24 - columns
     
     adr x22, piece_position
-    ldr x10, [x22]
-    ldr x11, [x22, #8]
-    ldr x12, [x22, #16]
-    ldr x13, [x22, #24]
+    ldp x10, x11, [x22]
+    ldp x12, x13, [x22, #16]
 
     adr x25, piece_state
-    adr x21, prev_state
-    ldrb w20, [x25]
-    strb w20, [x21]
 
     adr x20, piece_type
     ldrb w20, [x20]         // w20 - piece_type
@@ -404,27 +401,37 @@ b rotation_end
 
 rotation_end:
     // change the state
-    adr x1, piece_state 
-    ldrb w2, [x1]
+    ldrb w2, [x25]
     add w2, w2, #1
     and w2, w2, #3
-    strb w2, [x1]
+    strb w2, [x25]
 
     sub x0, x0, #1
     cmp x0, #0
     bne pick_rotation
+
+    // update position
+    stp x10, x11, [x22]
+    stp x12, x13, [x22, #16]
+    
+    EPILOGUE
+    ret
+
+cur_to_prev_pos:
+    PROLOGUE
+    str x0, [sp, #-16]!
+
+    adr x0, piece_state
+    adr x1, prev_state
+    ldrb w2, [x0]
+    strb w2, [x1]
 
     adr x0, previous_position
     adr x1, piece_position
     mov x2, #32
     bl memcpy
 
-    // update position
-    str x10, [x22]
-    str x11, [x22, #8]
-    str x12, [x22, #16]
-    str x13, [x22, #24]
-    
+    ldr x0, [sp], #16
     EPILOGUE
     ret
 
@@ -441,6 +448,26 @@ restore_prev_state:
     adr x1, prev_state
     ldrb w2, [x1]
     strb w2, [x0]
+
+    EPILOGUE
+    ret
+
+.global move_down
+move_down:
+    PROLOGUE
+
+    bl cur_to_prev_pos
+
+    adr x0, piece_position
+    ldp x1, x2, [x0]
+    ldp x3, x4, [x0, #16]
+    add x1, x1, #12
+    add x2, x2, #12
+    add x3, x3, #12
+    add x4, x4, #12
+
+    stp x1, x2, [x0]
+    stp x3, x4, [x0, #16]
 
     EPILOGUE
     ret
