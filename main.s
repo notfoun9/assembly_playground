@@ -1,7 +1,7 @@
 .data
 time_since_fall:
     .quad 0
-fall_speed = 3
+fall_speed = 30
 
 .text
 .include "macros.s"
@@ -34,7 +34,7 @@ _start:
     str     x1, [x0, #12]
     mov     w1, #0
     strb    w1, [x0, #23]
-    mov     w1, #1
+    mov     w1, #0
     strb    w1, [x0, #22]
     
     bl set_terminal_state
@@ -47,17 +47,18 @@ _start:
         bl adjust_grid
         bl clear_term
         bl print_grid
+        no_changes_in_cycle:
 
         adr x0, time_since_fall
         ldr x1, [x0]
         mrs x2, cntvct_el0
         sub x1, x2, x1
 
-        mov x2, #10
+        mov x2, #100
         mul x1, x1, x2
 
         mrs x2, cntfrq_el0
-        udiv x1, x1, x2 // deciseconds
+        udiv x1, x1, x2 // santiseconds
         mov x2, fall_speed
         cmp x1, x2
         bgt force_fall
@@ -67,7 +68,12 @@ _start:
         mov x2, #1
         mov x8, #0x3F
         svc #0
+
+        cmp x0, #0
+        beq no_changes_in_cycle
+
         ldrb w0, [x1]
+
 
 /* -- Switch case input char start -- */
         cmp w0, #' '
@@ -125,7 +131,6 @@ _start:
         adr x0, time_since_fall
         mrs x1, cntvct_el0
         str x1, [x0]
-
     switch_input_char_end:
     b game_loop
 

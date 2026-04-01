@@ -13,6 +13,9 @@ grid:
     .space raws * columns + 1
 len = . - grid
 
+field:
+    .space 10000
+
 .text
 .include "macros.s"
 .global adjust_grid
@@ -131,6 +134,7 @@ fill_grid:
 .global print_grid
 print_grid:
     PROLOGUE
+    adr x0, field
     adr x10, grid
     mov x11, #1 // raws
     mov x21, raws
@@ -150,18 +154,21 @@ print_grid:
             mov x24, x11
             mul x24, x24, x22
             add x24, x24, x12
-            ldrb w0, [x10, x24]
+            ldrb w1, [x10, x24]
             bl write_cell
 
             add x12, x12, #1
             b print_cols
         print_cols_end:
         add x11, x11, #1
-        mov w23, '\n'
-        strb w23, [x20]
-        bl write_symbl
+        mov w23, #'\n'
+        strb w23, [x0], #1
         b print_raws
     print_raws_end:
+    mov w23, #0
+    strb w23, [x0], #1
+    adr x1, field
+    bl write_c_str
     EPILOGUE
     ret
 

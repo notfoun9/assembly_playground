@@ -1,4 +1,5 @@
 .text
+.include "macros.s"
 
 // places shadow char in w0
 .global get_shadow_char
@@ -8,66 +9,68 @@ get_shadow_char:
     sub w0, w0, #0x20
     ret
 
+// gets field ptr in x0, char in w1
 .global write_cell
 write_cell:
+    PROLOGUE
     /* color switch start */
-    cmp w0, #' '
+    cmp w1, #' '
     beq write_blank_cell
 
-    cmp w0, #'I'
+    cmp w1, #'I'
     beq set_magenta_seq
-    cmp w0, #'m'
+    cmp w1, #'m'
     beq set_magenta_seq
 
-    cmp w0, #'I' - 0x20
+    cmp w1, #'I' - 0x20
     beq set_magenta_shadow_seq
 
-    cmp w0, #'L'
+    cmp w1, #'L'
     beq set_orange_seq
-    cmp w0, #'o'
+    cmp w1, #'o'
     beq set_orange_seq
 
-    cmp w0, #'L' - 0x20
+    cmp w1, #'L' - 0x20
     beq set_orange_shadow_seq
 
-    cmp w0, #'J'
+    cmp w1, #'J'
     beq set_blue_seq
-    cmp w0, #'b'
+    cmp w1, #'b'
     beq set_blue_seq
 
-    cmp w0, #'J' - 0x20
+    cmp w1, #'J' - 0x20
     beq set_blue_shadow_seq
 
-    cmp w0, #'S'
+    cmp w1, #'S'
     beq set_green_seq
-    cmp w0, #'g'
+    cmp w1, #'g'
     beq set_green_seq
 
-    cmp w0, #'S' - 0x20
+    cmp w1, #'S' - 0x20
     beq set_green_shadow_seq
 
-    cmp w0, #'T'
+    cmp w1, #'T'
     beq set_purple_seq
-    cmp w0, #'p'
+    cmp w1, #'p'
     beq set_purple_seq
 
-    cmp w0, #'T' - 0x20
+    cmp w1, #'T' - 0x20
     beq set_purple_shadow_seq
 
-    cmp w0, #'Z'
+    cmp w1, #'Z'
     beq set_red_seq
-    cmp w0, #'r'
+    cmp w1, #'r'
     beq set_red_seq
 
-    cmp w0, #'Z' - 0x20
+    cmp w1, #'Z' - 0x20
     beq set_red_shadow_seq
 
-    cmp w0, #'O'
+    cmp w1, #'O'
     beq set_yellow_seq
-    cmp w0, #'y'
+    cmp w1, #'y'
     beq set_yellow_seq
 
-    cmp w0, #'O' - 0x20
+    cmp w1, #'O' - 0x20
     beq set_yellow_shadow_seq
 
     set_magenta_seq:
@@ -115,17 +118,17 @@ write_cell:
     /* color switch end */
 
     write_colored_cell:
-        mov x0, #0
         mov x2, colored_cell_len
-        mov x8, #0x40
-        svc #0
+        bl memcpy
+        add x0, x0, x2
+    EPILOGUE
     ret
     write_blank_cell:
-        mov x0, #0
         adr x1, blank_cell_seq
         mov x2, blank_cell_len
-        mov x8, #0x40
-        svc #0
+        bl memcpy
+        add x0, x0, x2
+    EPILOGUE
     ret
 
 // returns color char in w0

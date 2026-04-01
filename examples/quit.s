@@ -87,6 +87,7 @@ restore_and_exit:
 
 // x0 - dest, x1 - src, x2 - len
 memcpy:
+    stp x0, x2, [sp, #-16]!
     memcpy_start:
         cbz x2, memcpy_end
         ldrb w3, [x1], #1
@@ -94,6 +95,7 @@ memcpy:
         sub x2, x2, #1
         b memcpy_start
     memcpy_end:
+    ldp x0, x2, [sp], #16
     ret
 
 handle_error:
