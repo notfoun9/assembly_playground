@@ -1,5 +1,5 @@
 .data
-raws = 24
+raws = 25
 columns = 12
 
 .global score
@@ -177,6 +177,11 @@ print_grid:
     print_raws:
         cmp x11, x21
         beq print_raws_end
+
+        mov x1, x11
+        bl place_left_side_line
+        
+        print_raw:
         mov x12, #0
         print_cols:
             cmp x12, x22
@@ -478,3 +483,77 @@ is_game_over:
     game_is_over:
     mov x0, #1
     ret
+
+// expects x0 - field ptr, x1 - raw
+place_left_side_line:
+    PROLOGUE
+    cmp x1, left_window_start
+    blt place_idle_line
+    cmp x1, left_window_end
+    bgt place_idle_line
+    bl place_window_line
+    EPILOGUE
+    ret
+
+    place_idle_line:
+    adr x1, idle_line
+    mov x2, idle_line_length
+    bl memcpy
+    add x0, x0, idle_line_length
+    EPILOGUE
+    ret
+
+place_window_line:    
+    PROLOGUE
+    adr x2, left_window
+    mov x3, x1
+    sub x3, x3, left_window_start
+    find_line_cycle:
+        cmp x3, #0
+        beq find_line_cycle_end
+
+        find_null_cycle:
+            add x2, x2, #1
+            ldrb w4, [x2]
+            cmp x4, #0
+            bne find_null_cycle
+        find_null_cycle_end:
+
+        add x2, x2, #1
+        sub x3, x3, #1
+        b find_line_cycle
+    find_line_cycle_end:
+
+    // now x2 points on the start of the line to print
+    place_line_cycle:
+        ldrb w3, [x2], #1
+        cmp w3, #0
+        beq place_line_cycle_end
+        strb w3, [x0], #1
+        b place_line_cycle
+    place_line_cycle_end:
+
+    EPILOGUE
+    ret
+
+.data
+
+left_window_start = 0
+left_window_hight = 10
+left_window_end = left_window_start + left_window_hight - 1
+
+idle_line_length = 23
+
+idle_line:
+    .ascii  "                       "
+left_window:
+    .ascii  "  ┏━━━━━━━━━━━━━━━━━┓  \0"
+    .ascii  "  ┃ Left          A ┃  \0"
+    .ascii  "  ┃ Right         D ┃  \0"
+    .ascii  "  ┃ Down          S ┃  \0"
+    .ascii  "  ┃ Drop      Space ┃  \0"
+    .ascii  "  ┃ Rotate ↻      K ┃  \0"
+    .ascii  "  ┃ Rotate ↺      J ┃  \0"
+    .ascii  "  ┃ Rotate 180°   L ┃  \0"
+    .ascii  "  ┃ Quit          Q ┃  \0"
+    .ascii  "  ┗━━━━━━━━━━━━━━━━━┛  \0"
