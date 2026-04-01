@@ -35,8 +35,9 @@ adjust_grid:
     bne no_pieces_collisions
         bl restore_prev_state
         bl place_piece_on_grid
-        bl spawn_new_piece
+        bl clear_lines
         bl erase_shadow
+        bl spawn_new_piece
     no_pieces_collisions:
 // check for collisions with placed pieces end
 
@@ -46,8 +47,9 @@ adjust_grid:
     beq no_floor_collision
         bl restore_prev_state
         bl place_piece_on_grid
-        bl spawn_new_piece
+        bl clear_lines
         bl erase_shadow
+        bl spawn_new_piece
     no_floor_collision:
 // check for collisions with floor
 
@@ -270,8 +272,6 @@ place_piece_on_grid:
 teleport_down:
     PROLOGUE
 
-    bl erase_shadow
-
 // erase current piece state
     adr x4, piece_position
     ldp x0, x1, [x4]
@@ -292,6 +292,8 @@ teleport_down_loop:
     bne teleport_no_pieces_collisions
         bl restore_prev_state
         bl place_piece_on_grid
+        bl clear_lines
+        bl erase_shadow
         bl spawn_new_piece
         b teleport_down_loop_end
     teleport_no_pieces_collisions:
@@ -301,6 +303,8 @@ teleport_down_loop:
     beq teleport_no_floor_collision
         bl restore_prev_state
         bl place_piece_on_grid
+        bl clear_lines
+        bl erase_shadow
         bl spawn_new_piece
         b teleport_down_loop_end
     teleport_no_floor_collision:
@@ -322,11 +326,8 @@ teleport_down_loop_end:
     strb w5, [x4, x3]
 // add current piece state end
 
-// FIXME:
-
     EPILOGUE
     ret
-
 
 .global get_raws
 get_raws:
@@ -337,4 +338,69 @@ get_raws:
 get_columns:
     mov x0, columns
     ret
+
+clear_lines:
+    PROLOGUE
+    adr x0, grid
+    adr x1, piece_position
+    mov x2, #0
+    clear_lines_loop:
+        cmp x2, #32
+        beq clear_lines_loop_end
+
+        ldr x3, [x1, x2]
+        // x3 = raw * columns + column
+        // x3 / columns = raw
+        mov x4, columns
+        udiv x3, x3, x4
+        mul x3, x3, x4
+        add x3, x3, #1   // x3 - first char on raw
+        mov x4, max_column
+        add x4, x4, x3
+        
+        check_line_loop:
+            cmp x3, x4
+            beq clear_line
+
+            ldrb w5, [x0, x3]
+            cmp w5, #'a'
+            blt check_line_loop_end
+            cmp w5, #'z'
+            bgt check_line_loop_end
+
+            add x3, x3, #1
+            b check_line_loop
+        check_line_loop_end:
+
+        add x2, x2, #8
+        b clear_lines_loop
+    clear_lines_loop_end:
+    EPILOGUE
+    ret
+
+clear_line:
+    mov x4, columns
+    udiv x3, x3, x4 // x3 - cur raw
+    mov x5, #1
+    clear_line_loop:
+        cmp x3, x5
+        beq check_line_loop_end
+
+        mov x6, #1
+        mov x7, max_column
+        copy_upper_line_loop:
+            cmp x6, x7
+            mov x8, columns
+            bgt copy_upper_line_loop_end
+            mul x8, x3, x8
+            add x8, x8, x6  // x8 - cur cell
+            sub x9, x8, #12 // x9 - cell upper
+            ldrb w9, [x0, x9]
+            strb w9, [x0, x8]
+        
+            add x6, x6, #1
+            b copy_upper_line_loop
+        copy_upper_line_loop_end:
+        sub x3, x3, #1
+        b clear_line_loop
 

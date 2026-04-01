@@ -63,7 +63,7 @@ teleport_down_shadow:
     ldp x3, x4, [x0, #16]
     adr x5, grid
     teleport_down_shadow_loop:
-// FIXME:
+// FIXME: make it shorter
         ldrb w6, [x5, x1]
         cmp w6, #'a'
         blt not_colored_char_1
