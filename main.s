@@ -1,7 +1,7 @@
 .data
 time_since_fall:
     .quad 0
-fall_speed = 6
+fall_speed = 3
 
 .text
 .include "macros.s"
@@ -118,6 +118,7 @@ _start:
         cmp w0, #'q'
         beq game_loop_end
 
+        b switch_input_char_end
 /* --- Switch case input char end --- */
     force_fall:
         bl move_down
