@@ -2,6 +2,10 @@
 raws = 24
 columns = 12
 
+.global score
+score:
+    .quad 0x0
+
 max_raw = raws - 2
 min_raw = 1
 
@@ -69,6 +73,9 @@ adjust_grid:
 // erase previous piece state end
 
     bl adjust_shadow
+    bl is_game_over
+    cmp x0, #1
+    beq game_over
 
 // add current piece state start
     adr x4, piece_position
@@ -319,6 +326,10 @@ b teleport_down_loop
 
 teleport_down_loop_end:
 
+    bl is_game_over
+    cmp x0, #1
+    beq game_over
+
 // add current piece state start
     adr x4, piece_position
     ldp x0, x1, [x4]
@@ -386,6 +397,12 @@ clear_lines:
     ret
 
 clear_line:
+    // increase score
+    adr x4, score
+    ldr x5, [x4]
+    add x5, x5, #1
+    str x5, [x4]
+
     mov x4, columns
     udiv x3, x3, x4 // x3 - cur raw
     mov x5, #1
@@ -411,3 +428,29 @@ clear_line:
         sub x3, x3, #1
         b clear_line_loop
 
+// returns 1 in x0 if true
+.global is_game_over
+is_game_over:
+    adr x0, grid
+    mov x1, min_column
+    mov x2, columns
+    add x1, x1, x2
+    add x2, x2, x2
+    sub x2, x2, #1
+    is_game_over_loop:
+        ldrb w3, [x0, x1]
+        cmp w3, #'a'
+        blt game_is_not_over
+        cmp w3, #'z'
+        bgt game_is_not_over
+        b game_is_over
+
+        game_is_not_over:
+        add x1, x1, #1
+        cmp x1, x2
+        bne is_game_over_loop
+    mov x0, #0
+    ret
+    game_is_over:
+    mov x0, #1
+    ret

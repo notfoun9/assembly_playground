@@ -3,6 +3,10 @@ time_since_fall:
     .quad 0
 fall_speed = 30
 
+game_over_msg:
+    .ascii "Game Over! Final score: "
+game_over_msg_len = . - game_over_msg
+
 .text
 .include "macros.s"
 .global _start
@@ -14,7 +18,6 @@ _start:
     mrs x1, cntvct_el0
     str x1, [x0]
 
-    bl timer_start
     bl clear_term
     bl hide_cursor
 
@@ -140,13 +143,21 @@ _start:
 /* ------------------------------ */
 
 recover_and_exit:
+.global game_over
+game_over:
     bl show_cursor
     bl clear_term
 
-    bl timer_finish
+    mov x0, #0
+    adr x1, game_over_msg
+    mov x2, game_over_msg_len
+    mov x8, #0x40
+    svc #0
+
+    adr x0, score
+    ldr x0, [x0]
     bl print_num
 
     mov x0, #0
     mov x8, #0x5D
     svc #0
-
