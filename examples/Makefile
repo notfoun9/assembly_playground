@@ -1,4 +1,4 @@
-all: itoa input sleep count stack stack_with_macro quit
+all: itoa input sleep count stack stack_with_macro quit rand
 
 itoa: itoa.s
 	@as -o $@.o $<
@@ -33,4 +33,9 @@ stack_with_macro: stack_with_macro.s
 quit: quit.s
 	@as -g -o $@.o $<
 	@ld -o $(EXECUTABLES_PATH)/$@ $@.o
+	@rm $@.o
+
+rand: rand.s
+	@as -g -o $@.o $<
+	@ld -o $(EXECUTABLES_PATH)/$@ $@.o $(OBJECTS_PATH)/utils.o
 	@rm $@.o

@@ -516,6 +516,14 @@ move_left:
 spawn_new_piece:
     PROLOGUE
 
+    bl rand_64
+    mov x2, #7
+    udiv x1, x0, x2
+    mul x1, x1, x2
+    sub x0, x0, x1
+
+    bl set_piece_type
+
     bl get_default_position
     mov x1, x0
     adr x0, piece_position
@@ -532,4 +540,52 @@ spawn_new_piece:
 
     EPILOGUE
     ret
-    
+
+// expects x0 - from 0 to 7 - types
+// I, L, J, S, T, Z, O
+set_piece_type:
+    adr x1, piece_type
+    ldrb w2, [x1]
+    cmp x0, #0
+    beq set_piece_type_I
+    cmp x0, #1
+    beq set_piece_type_L
+    cmp x0, #2
+    beq set_piece_type_J
+    cmp x0, #3
+    beq set_piece_type_S
+    cmp x0, #4
+    beq set_piece_type_T
+    cmp x0, #5
+    beq set_piece_type_Z
+    cmp x0, #6
+    beq set_piece_type_O
+
+    set_piece_type_I:
+    mov w2, #'I'
+    strb w2, [x1]
+    ret
+    set_piece_type_L:
+    mov w2, #'L'
+    strb w2, [x1]
+    ret
+    set_piece_type_J:
+    mov w2, #'J'
+    strb w2, [x1]
+    ret
+    set_piece_type_S:
+    mov w2, #'S'
+    strb w2, [x1]
+    ret
+    set_piece_type_T:
+    mov w2, #'T'
+    strb w2, [x1]
+    ret
+    set_piece_type_Z:
+    mov w2, #'Z'
+    strb w2, [x1]
+    ret
+    set_piece_type_O:
+    mov w2, #'O'
+    strb w2, [x1]
+    ret

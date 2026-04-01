@@ -125,6 +125,21 @@ print_num:
     EPILOGUE
     ret
 
+// places random 64 bytes in x0
+.global rand_64
+rand_64:
+    sub sp, sp, #64
+
+    mov     x0, sp
+    mov     x1, #64
+    mov     x2, #0
+    mov     x8, #278
+    svc     #0
+    ldr     x0, [sp]
+
+    add sp, sp, #64
+    ret
+
 .data
 timespec:
     .quad 0
