@@ -1,10 +1,10 @@
 .data
 .global shadow_position
 shadow_position:
-    .quad 13
-    .quad 13
-    .quad 13
-    .quad 13
+    .quad -1
+    .quad -1
+    .quad -1
+    .quad -1
 
 .text
 .include "macros.s"
@@ -16,12 +16,16 @@ adjust_shadow:
     adr x4, shadow_position
     ldp x0, x1, [x4]
     ldp x2, x3, [x4, #16]
+    cmp x0, #0
+    blt no_shdow_to_erase
+
     adr x4, grid
     mov w5, #' '
     strb w5, [x4, x0]
     strb w5, [x4, x1]
     strb w5, [x4, x2]
     strb w5, [x4, x3]
+    no_shdow_to_erase:
 // erase current shadow state end
 
     adr x0, shadow_position
@@ -37,12 +41,15 @@ adjust_shadow:
     adr x4, shadow_position
     ldp x0, x1, [x4]
     ldp x2, x3, [x4, #16]
+    cmp x0, #0
+    blt no_shadow_to_draw
 
     adr x4, grid
     strb w5, [x4, x0]
     strb w5, [x4, x1]
     strb w5, [x4, x2]
     strb w5, [x4, x3]
+    no_shadow_to_draw:
 // add current shadow state end
 
     EPILOGUE
@@ -124,9 +131,9 @@ teleport_down_shadow:
     EPILOGUE
     ret
 
-.global erase_shadow
-erase_shadow:
-    mov x0, #0
+.global remove_shadow
+remove_shadow:
+    mov x0, #-1
     adr x1, shadow_position
     stp x0, x0, [x1]
     stp x0, x0, [x1, #16]

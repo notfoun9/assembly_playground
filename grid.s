@@ -43,7 +43,7 @@ adjust_grid:
         bl restore_prev_state
         bl place_piece_on_grid
         bl clear_lines
-        bl erase_shadow
+        bl remove_shadow
         bl spawn_new_piece
     no_pieces_collisions:
 // check for collisions with placed pieces end
@@ -55,7 +55,7 @@ adjust_grid:
         bl restore_prev_state
         bl place_piece_on_grid
         bl clear_lines
-        bl erase_shadow
+        bl remove_shadow
         bl spawn_new_piece
     no_floor_collision:
 // check for collisions with floor
@@ -331,7 +331,7 @@ teleport_down_loop:
         bl restore_prev_state
         bl place_piece_on_grid
         bl clear_lines
-        bl erase_shadow
+        bl remove_shadow
         bl spawn_new_piece
         b teleport_down_loop_end
     teleport_no_pieces_collisions:
@@ -342,7 +342,7 @@ teleport_down_loop:
         bl restore_prev_state
         bl place_piece_on_grid
         bl clear_lines
-        bl erase_shadow
+        bl remove_shadow
         bl spawn_new_piece
         b teleport_down_loop_end
     teleport_no_floor_collision:
