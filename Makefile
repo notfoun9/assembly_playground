@@ -7,6 +7,7 @@ export OBJECTS_PATH
 EXAMPLES_PATH="$(shell pwd)/examples"
 export EXAMPLES_PATH
 
+SOURCES_PATH="$(shell pwd)/src"
 UTILS_PATH="$(shell pwd)/utils"
 ASFLAGS := "-I$(UTILS_PATH)"
 
@@ -14,7 +15,15 @@ MACROS_PATH="$(shell pwd)/macros"
 ASFLAGS += "-I$(MACROS_PATH)" 
 export ASFLAGS
 
-all: prepare colors pieces grid positions utils shadow main
+
+all: prepare utils sources main
+
+prepare:
+	@mkdir -p objects
+	@mkdir -p executables
+
+sources:
+	@$(MAKE) --no-print-directory -C $(SOURCES_PATH) all
 
 main: main.s
 	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
@@ -28,28 +37,9 @@ main: main.s
 		$(OBJECTS_PATH)/iomanip.o   \
 		$(OBJECTS_PATH)/$@.o
 
-prepare:
-	@mkdir -p objects
-	@mkdir -p executables
-
-grid: grid.s
-	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
-
-pieces: pieces.s
-	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
-
-positions: positions.s
-	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
-
-colors: colors.s
-	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
-
-shadow: shadow.s
-	@as $(ASFLAGS) -g -o $(OBJECTS_PATH)/$@.o $<
-
 .PHONY: utils
 utils:
-	@$(MAKE) --no-print-directory -C $(UTILS_PATH)
+	@$(MAKE) --no-print-directory -C $(UTILS_PATH) all
 
 .PHONY: examples
 examples:
