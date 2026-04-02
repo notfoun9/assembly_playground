@@ -26,8 +26,6 @@ Runs as `./executables/main`
 
 ## TODO
 - Show the next piece in a small window
-- Correct Tetris scoring (now it's just a cleared lines counter)
-- Show current score
 - Fancy "Game Over" message
 - Way to choose initial difficulty
 - Difficulty increase
