@@ -25,7 +25,6 @@ Runs as `./executables/main`
 
 
 ## TODO
-- Show the next piece in a small window
 - Fancy "Game Over" message
 - Way to choose initial difficulty
 - Difficulty increase
