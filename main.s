@@ -43,6 +43,7 @@ _start:
     bl set_terminal_state
 // term set
 
+    bl set_next_piece
     bl fill_grid
     bl spawn_new_piece
 

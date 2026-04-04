@@ -18,6 +18,9 @@ three:
 .global piece_type
 piece_type:
     .ascii "I"
+.global next_piece_type
+next_piece_type:
+    .ascii "I"
 piece_state:
     .byte 0 // from 0 to 3
 prev_state:
@@ -517,13 +520,12 @@ move_left:
 spawn_new_piece:
     PROLOGUE
 
-    bl rand_64
-    mov x2, #7
-    udiv x1, x0, x2
-    mul x1, x1, x2
-    sub x0, x0, x1
+    adr x0, piece_type
+    adr x1, next_piece_type
+    ldrb w1, [x1] 
+    strb w1, [x0]
 
-    bl set_piece_type
+    bl set_next_piece
 
     bl get_default_position
     mov x1, x0
@@ -539,6 +541,8 @@ spawn_new_piece:
     mov w1, #0
     strb w1, [x0]
 
+    bl update_next_piece_window
+
     EPILOGUE
     ret
 
@@ -549,9 +553,18 @@ types:
 .text
 // expects x0 - from 0 to 7 - types
 // I, L, J, S, T, Z, O
-set_piece_type:
+.global set_next_piece
+set_next_piece:
+    PROLOGUE
+    bl rand_64
+    mov x2, #7
+    udiv x1, x0, x2
+    mul x1, x1, x2
+    sub x0, x0, x1
+
     adr x1, types
     ldrb w0, [x1, x0]
-    adr x1, piece_type
+    adr x1, next_piece_type
     strb w0, [x1]
+    EPILOGUE
     ret

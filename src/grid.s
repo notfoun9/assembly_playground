@@ -196,9 +196,10 @@ print_grid:
             add x12, x12, #1
             b print_cols
         print_cols_end:
+        mov x1, x11
+        bl place_right_side_line
+
         add x11, x11, #1
-        mov w23, #'\n'
-        strb w23, [x0], #1
         b print_raws
     print_raws_end:
     mov w23, #0
@@ -522,52 +523,122 @@ is_game_over:
 place_left_side_line:
     PROLOGUE
     cmp x1, left_window_start
-    blt place_idle_line
+    blt place_idle_left_line
     cmp x1, left_window_end
-    bgt place_idle_line
-    bl place_window_line
+    bgt place_idle_left_line
+    bl place_left_window_line
     EPILOGUE
     ret
 
-    place_idle_line:
-    adr x1, idle_line
-    mov x2, idle_line_length
+    place_idle_left_line:
+    adr x1, idle_left_line
+    mov x2, idle_left_line_length
     bl memcpy
-    add x0, x0, idle_line_length
+    add x0, x0, idle_left_line_length
     EPILOGUE
     ret
 
-place_window_line:    
+place_left_window_line:
     PROLOGUE
     adr x2, left_window
     mov x3, x1
     sub x3, x3, left_window_start
-    find_line_cycle:
+    find_left_line_cycle:
         cmp x3, #0
-        beq find_line_cycle_end
+        beq find_left_line_cycle_end
 
-        find_null_cycle:
+        find_left_null_cycle:
             add x2, x2, #1
             ldrb w4, [x2]
             cmp x4, #0
-            bne find_null_cycle
-        find_null_cycle_end:
+            bne find_left_null_cycle
+        find_left_null_cycle_end:
 
         add x2, x2, #1
         sub x3, x3, #1
-        b find_line_cycle
-    find_line_cycle_end:
+        b find_left_line_cycle
+    find_left_line_cycle_end:
 
     // now x2 points on the start of the line to print
-    place_line_cycle:
+    place_left_line_cycle:
         ldrb w3, [x2], #1
         cmp w3, #0
-        beq place_line_cycle_end
+        beq place_left_line_cycle_end
         strb w3, [x0], #1
-        b place_line_cycle
-    place_line_cycle_end:
+        b place_left_line_cycle
+    place_left_line_cycle_end:
 
     EPILOGUE
+    ret
+
+// expects x0 - field ptr, x1 - raw
+place_right_side_line:
+    PROLOGUE
+    cmp x1, right_window_start
+    blt place_idle_right_line
+    cmp x1, right_window_end
+    bgt place_idle_right_line
+
+    bl place_right_window_line
+    EPILOGUE
+    ret
+
+    place_idle_right_line:
+    adr x1, idle_right_line
+    mov x2, idle_right_line_length
+    bl memcpy
+    add x0, x0, idle_right_line_length
+    EPILOGUE
+    ret
+
+// expects x0 - field ptr, x1 - raw
+place_right_window_line:
+    sub x1, x1, right_window_start
+    cmp x1, #0
+    bne not_right_0_line
+        adr x1, right_window_line_0
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_0_line:
+    cmp x1, #1
+    bne not_right_1_line
+        adr x1, right_window_line_1
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_1_line:
+    cmp x1, #2
+    bne not_right_2_line
+        adr x1, right_window_line_2
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_2_line:
+    cmp x1, #3
+    bne not_right_3_line
+        adr x1, right_window_line_3
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_3_line:
+    cmp x1, #4
+    bne not_right_4_line
+        adr x1, right_window_line_4
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_4_line:
+    cmp x1, #5
+    bne not_right_5_line
+        adr x1, right_window_line_5
+        ldr x1, [x1]
+        b right_line_chosen
+    not_right_5_line:
+
+    right_line_chosen:
+    place_right_line_cycle:
+        ldrb w2, [x1], #1
+        cmp w2, #0
+        beq place_right_line_cycle_end
+        strb w2, [x0], #1
+        b place_right_line_cycle
+    place_right_line_cycle_end:
     ret
 
 // x2 - new score
@@ -598,16 +669,15 @@ update_score_window:
     score_str_loop_end:
     ret
 
+.data
 left_window_start = 0
 left_window_hight = 16
 left_window_end = left_window_start + left_window_hight - 1
 
-idle_line_length = 23
+idle_left_line_length = 23
 place_to_insert_score = 62 + 28 + 13
 
-
-.data
-idle_line:
+idle_left_line:
     .ascii  "                       "
 left_window:
     .ascii  "  ┏━━━━━━━━━━━━━━━━━┓  \0"
@@ -616,7 +686,7 @@ left_window:
     .ascii  "  ┃                 ┃  \0"
     .ascii  "  ┗━━━━━━━━━━━━━━━━━┛  \0"
     .ascii  "                       \0"
-    .ascii  "  ┏━━━━━━━━━━━━━━━━━┓  \0"
+    .ascii  "  ┏━━━━Controls━━━━━┓  \0"
     .ascii  "  ┃ Left          A ┃  \0"
     .ascii  "  ┃ Right         D ┃  \0"
     .ascii  "  ┃ Down          S ┃  \0"
@@ -626,3 +696,160 @@ left_window:
     .ascii  "  ┃ Rotate 180°   L ┃  \0"
     .ascii  "  ┃ Quit          Q ┃  \0"
     .ascii  "  ┗━━━━━━━━━━━━━━━━━┛  \0"
+
+right_window_start = 0
+right_window_hight = 6
+right_window_end = right_window_start + right_window_hight - 1
+
+idle_right_line_length = 24
+
+idle_right_line:
+    .ascii  "                       \n"
+
+right_window_line_0:
+    .quad right_window_line_0_initial
+right_window_line_1:
+    .quad right_window_line_1_initial
+right_window_line_2:
+    .quad right_window_line_2_initial
+right_window_line_3:
+    .quad right_window_line_3_initial
+right_window_line_4:
+    .quad right_window_line_4_initial
+right_window_line_5:
+    .quad right_window_line_5_initial
+
+right_window_line_0_initial:
+    .ascii  "  ┏━━━Next piece━━━┓  \n\0"
+right_window_line_1_initial:
+    .ascii  "  ┃                ┃  \n\0"
+right_window_line_2_initial:
+    .ascii  "  ┃                ┃  \n\0" // 3th line
+right_window_line_3_initial:
+    .ascii  "  ┃                ┃  \n\0" // 4th line
+right_window_line_4_initial:
+    .ascii  "  ┃                ┃  \n\0"
+right_window_line_5_initial:
+    .ascii  "  ┗━━━━━━━━━━━━━━━━┛  \n\0"
+
+right_window_line_2_I:
+    .ascii  "  ┃                ┃  \n\0" // 3th line
+right_window_line_3_I:
+    .ascii  "  ┃    \x1b[48;2;20;200;200m        \x1b[0m    ┃  \n\0" // 4th line
+
+right_window_line_2_L:
+    .ascii  "  ┃         \x1b[48;2;240;125;50m  \x1b[0m     ┃  \n\0" // 3th line
+right_window_line_3_L:
+    .ascii  "  ┃     \x1b[48;2;240;125;50m      \x1b[0m     ┃  \n\0" // 4th line
+
+right_window_line_2_J:
+    .ascii  "  ┃     \x1b[48;2;60;100;250m  \x1b[0m         ┃  \n\0" // 3th line
+right_window_line_3_J:
+    .ascii  "  ┃     \x1b[48;2;60;100;250m      \x1b[0m     ┃  \n\0" // 4th line
+
+right_window_line_2_S:
+    .ascii  "  ┃       \x1b[48;02;40;200;50m    \x1b[0m     ┃  \n\0" // 3th line
+right_window_line_3_S:
+    .ascii  "  ┃     \x1b[48;02;40;200;50m    \x1b[0m       ┃  \n\0" // 4th line
+
+right_window_line_2_T:
+    .ascii  "  ┃       \x1b[48;2;170;50;220m  \x1b[0m       ┃  \n\0" // 3th line
+right_window_line_3_T:
+    .ascii  "  ┃     \x1b[48;2;170;50;220m      \x1b[0m     ┃  \n\0" // 4th line
+
+right_window_line_2_Z:
+    .ascii  "  ┃     \x1b[48;02;220;65;50m    \x1b[0m       ┃  \n\0" // 3th line
+right_window_line_3_Z:
+    .ascii  "  ┃       \x1b[48;02;220;65;50m    \x1b[0m     ┃  \n\0" // 4th line
+
+right_window_line_2_O:
+    .ascii  "  ┃      \x1b[48;2;210;190;30m    \x1b[0m      ┃  \n\0" // 3th line
+right_window_line_3_O:
+    .ascii  "  ┃      \x1b[48;2;210;190;30m    \x1b[0m      ┃  \n\0" // 4th line
+
+.text
+// One of:  I, L, J, S, T, Z, O
+.global update_next_piece_window
+update_next_piece_window:
+    adr x0, next_piece_type
+    ldrb w0, [x0]
+
+    cmp w0, #'I'
+    beq next_piece_I
+    cmp w0, #'L'
+    beq next_piece_L
+    cmp w0, #'J'
+    beq next_piece_J
+    cmp w0, #'S'
+    beq next_piece_S
+    cmp w0, #'T'
+    beq next_piece_T
+    cmp w0, #'Z'
+    beq next_piece_Z
+    cmp w0, #'O'
+    beq next_piece_O
+
+    ret
+
+next_piece_I:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_I
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_I
+    str x1, [x0]
+    ret
+
+next_piece_L:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_L
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_L
+    str x1, [x0]
+    ret
+
+next_piece_J:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_J
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_J
+    str x1, [x0]
+    ret
+
+next_piece_S:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_S
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_S
+    str x1, [x0]
+    ret
+
+next_piece_T:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_T
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_T
+    str x1, [x0]
+    ret
+
+next_piece_Z:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_Z
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_Z
+    str x1, [x0]
+    ret
+
+next_piece_O:
+    ldr x0, =right_window_line_2
+    ldr x1, =right_window_line_2_O
+    str x1, [x0]
+    ldr x0, =right_window_line_3
+    ldr x1, =right_window_line_3_O
+    str x1, [x0]
+    ret
